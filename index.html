@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextStepAI &mdash; Find Your Next Step</title>
+    <meta name="description" content="NextStepAI helps companies identify and execute the next step they need to progress and grow.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0e27;
+            --bg-mid: #1a1f3a;
+            --accent: #4ade80;
+            --accent-glow: rgba(74, 222, 128, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background gradient orbs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px;
+            left: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(74, 222, 128, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -300px;
+            right: -200px;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Navigation ───────────────────────────────────── */
+        nav {
+            padding: 24px 0;
+            position: sticky;
+            top: 0;
+            background: rgba(10, 14, 39, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            z-index: 100;
+        }
+
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--accent);
+            color: var(--bg-dark);
+            text-decoration: none;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px var(--accent-glow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            background: var(--card-bg);
+            box-shadow: none;
+        }
+
+        /* ── Hero ─────────────────────────────────────────── */
+        .hero {
+            padding: 100px 0 80px;
+            text-align: center;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 6px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -1.5px;
+            margin-bottom: 24px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h1 .highlight {
+            background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-tagline {
+            font-size: clamp(16px, 2vw, 19px);
+            color: var(--text-secondary);
+            max-width: 680px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Sections ─────────────────────────────────────── */
+        section {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 720px;
+            margin: 0 auto 60px;
+        }
+
+        h2 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            letter-spacing: -0.8px;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-size: 17px;
+            color: var(--text-secondary);
+        }
+
+        /* ── What we do — cards ───────────────────────────── */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: transform 0.2s, border-color 0.2s, background 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(74, 222, 128, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .card-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--accent-glow);
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .card h3 {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* ── About ────────────────────────────────────────── */
+        .about-content {
+            max-width: 760px;
+            margin: 0 auto;
+            font-size: 17px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .about-content p {
+            margin-bottom: 18px;
+        }
+
+        .about-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ── Contact ──────────────────────────────────────── */
+        .contact {
+            text-align: center;
+            background: linear-gradient(180deg, transparent 0%, rgba(74, 222, 128, 0.04) 100%);
+            border-top: 1px solid var(--card-border);
+        }
+
+        .contact-card {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 48px 32px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+        }
+
+        .contact-card h2 {
+            margin-bottom: 12px;
+        }
+
+        .contact-card p {
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+            font-size: 16px;
+        }
+
+        .contact-email {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: var(--accent);
+            color: var(--bg-dark);
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .contact-email:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px var(--accent-glow);
+        }
+
+        /* ── Footer ───────────────────────────────────────── */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        /* ── Responsive ───────────────────────────────────── */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+
+            .nav-links {
+                gap: 20px;
+            }
+
+            .nav-links a:not(.btn) {
+                display: none;
+            }
+
+            .hero {
+                padding: 60px 0 50px;
+            }
+
+            section {
+                padding: 60px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container nav-inner">
+        <div class="logo">NextStep<span>AI</span></div>
+        <div class="nav-links">
+            <a href="#what-we-do">What We Do</a>
+            <a href="#about">About</a>
+            <a href="#contact" class="btn btn-outline">Get In Touch</a>
+        </div>
+    </div>
+</nav>
+
+<header class="hero">
+    <div class="container">
+        <span class="eyebrow">AI-Powered Business Strategy</span>
+        <h1>Find your <span class="highlight">next step</span> &mdash; the one that actually moves the needle.</h1>
+        <p class="hero-tagline">
+            We help companies cut through the noise and identify the single next step they need to progress, scale, and grow &mdash; powered by AI and grounded in real strategy.
+        </p>
+        <div class="hero-cta">
+            <a href="#contact" class="btn">Start a Conversation</a>
+            <a href="#what-we-do" class="btn btn-outline">Learn More</a>
+        </div>
+    </div>
+</header>
+
+<section id="what-we-do">
+    <div class="container">
+        <div class="section-header">
+            <h2>What we do</h2>
+            <p>Three things, done well, so your team can focus on growth instead of guesswork.</p>
+        </div>
+        <div class="cards">
+            <div class="card">
+                <div class="card-icon">01</div>
+                <h3>Assess</h3>
+                <p>We start by understanding where your business actually is &mdash; the metrics, the operations, the bottlenecks. No assumptions, no fluff.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">02</div>
+                <h3>Recommend</h3>
+                <p>We surface the highest-leverage next step. Not a 50-page roadmap &mdash; just the one or two moves that will make the biggest difference right now.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">03</div>
+                <h3>Execute</h3>
+                <p>We work alongside your team to put that next step into motion. AI tools, custom workflows, and hands-on support until it ships.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="about">
+    <div class="container">
+        <div class="section-header">
+            <h2>Why NextStepAI</h2>
+        </div>
+        <div class="about-content">
+            <p>
+                Most companies don't have a strategy problem &mdash; they have an execution problem. They know they need to grow. They just don't know which lever to pull next.
+            </p>
+            <p>
+                We pair AI-driven analysis with practical business sense to identify the single most important step your company should take next. Then we help you take it.
+            </p>
+            <p>
+                Less paralysis. More progress.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="contact" class="contact">
+    <div class="container">
+        <div class="contact-card">
+            <h2>Ready to find your next step?</h2>
+            <p>Send us a quick note and we'll set up a free 30-minute strategy call.</p>
+            <a href="mailto:hello@nextstepai.com" class="contact-email">hello@nextstepai.com</a>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        &copy; <span id="year"></span> NextStepAI. All rights reserved.
+    </div>
+</footer>
+
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
