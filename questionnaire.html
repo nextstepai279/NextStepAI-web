@@ -524,7 +524,7 @@
         <div class="submit-area">
             <button type="submit" class="btn">Submit Questionnaire &amp; Pick a Time</button>
             <div id="form-status"></div>
-            <p class="form-fallback">Prefer not to use this form? Email your answers directly to <a href="mailto:hello@nextstepai.com">hello@nextstepai.com</a>.</p>
+            <p class="form-fallback">Prefer not to use this form? Email your answers directly to <a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a>.</p>
         </div>
     </form>
 
@@ -658,7 +658,7 @@
                 throw new Error(data.message || 'Submission failed');
             }
         } catch (err) {
-            statusEl.textContent = 'Something went wrong sending your answers. Please email them directly to hello@nextstepai.com instead.';
+            statusEl.textContent = 'Something went wrong sending your answers. Please email them directly to hello@nextstepsai.com instead.';
             statusEl.className = 'status-error';
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Questionnaire & Pick a Time';
