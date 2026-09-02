@@ -3,277 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pre-Audit Questionnaire &mdash; NextStepAI</title>
-    <meta name="description" content="Answer a few questions about your business, by typing or by voice, then pick a time for your free strategy call.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-dark: #0a0e27;
-            --bg-mid: #1a1f3a;
-            --accent: #4ade80;
-            --accent-glow: rgba(74, 222, 128, 0.2);
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --text-muted: rgba(255, 255, 255, 0.5);
-            --card-bg: rgba(255, 255, 255, 0.04);
-            --card-border: rgba(255, 255, 255, 0.08);
-        }
-
-        html { scroll-behavior: smooth; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 880px;
-            margin: 0 auto;
-            padding: 0 32px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ── Navigation ───────────────────────────────────── */
-        nav {
-            padding: 24px 0;
-            position: sticky;
-            top: 0;
-            background: rgba(10, 14, 39, 0.92);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--card-border);
-            z-index: 100;
-        }
-
-        .nav-inner {
-            max-width: 880px;
-            margin: 0 auto;
-            padding: 0 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); text-decoration: none; }
-        .logo span { color: var(--accent); }
-
-        .nav-links { display: flex; gap: 24px; align-items: center; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; }
-        .nav-links a:hover { color: var(--text-primary); }
-
-        .btn {
-            display: inline-block;
-            padding: 14px 28px;
-            background: var(--accent);
-            color: var(--bg-dark);
-            text-decoration: none;
-            border: none;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-        }
-
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 30px var(--accent-glow); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid var(--card-border); padding: 12px 24px; font-size: 14px; }
-        .btn-outline:hover { border-color: var(--accent); background: var(--card-bg); box-shadow: none; }
-
-        /* ── Page hero ────────────────────────────────────── */
-        .page-hero { padding: 64px 0 40px; text-align: center; }
-        .eyebrow {
-            display: inline-block;
-            padding: 6px 14px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 20px;
-        }
-        h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -1px; margin-bottom: 18px; }
-        .page-hero p { font-size: 16px; color: var(--text-secondary); max-width: 640px; margin: 0 auto; }
-        .page-hero p + p { margin-top: 10px; }
-
-        /* ── Form sections ────────────────────────────────── */
-        .q-section {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 32px;
-            margin-bottom: 24px;
-        }
-
-        .q-section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
-
-        .q-number {
-            flex-shrink: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: var(--accent-glow);
-            color: var(--accent);
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .q-section-header h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
-        .q-section-header p { font-size: 14px; color: var(--text-muted); }
-
-        .field { margin-bottom: 22px; }
-        .field:last-child { margin-bottom: 0; }
-        .field > label, .field > .label { display: block; font-weight: 600; font-size: 14.5px; margin-bottom: 8px; }
-        .field .hint { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
-
-        input[type="text"], input[type="email"], input[type="url"], input[type="number"], textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 10px;
-            border: 1px solid var(--card-border);
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 15px;
-        }
-
-        input::placeholder, textarea::placeholder { color: var(--text-muted); }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-
-        textarea { min-height: 110px; resize: vertical; display: block; }
-
-        .textarea-wrap { position: relative; }
-        .textarea-wrap textarea { padding-right: 56px; }
-
-        .mic-btn {
-            position: absolute;
-            right: 8px;
-            bottom: 8px;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            border: 1px solid var(--card-border);
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--text-primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: background 0.15s, border-color 0.15s;
-        }
-        .mic-btn:hover { border-color: var(--accent); }
-        .mic-btn.recording {
-            background: #ef4444;
-            border-color: #ef4444;
-            color: #fff;
-            animation: pulse 1.2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-        .mic-status { font-size: 12.5px; color: var(--accent); margin-top: 6px; min-height: 16px; }
-
-        .radio-group, .checkbox-group { display: flex; flex-direction: column; gap: 12px; }
-        .radio-option, .checkbox-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 15px;
-            color: var(--text-secondary);
-            cursor: pointer;
-        }
-        .radio-option input, .checkbox-option input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-
-        .other-text { margin-top: 4px; display: none; }
-
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-        input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px dashed var(--card-border);
-            background: rgba(255, 255, 255, 0.02);
-            color: var(--text-secondary);
-            font-family: inherit;
-            font-size: 14px;
-        }
-
-        .submit-area { text-align: center; padding: 8px 0 40px; }
-        .submit-area .btn { width: 100%; max-width: 420px; }
-        .form-fallback { font-size: 13.5px; color: var(--text-muted); margin-top: 16px; }
-        .form-fallback a { color: var(--accent); }
-
-        #form-status { text-align: center; font-size: 15px; margin: 16px 0; min-height: 20px; }
-        #form-status.status-success { color: var(--accent); }
-        #form-status.status-error { color: #f87171; }
-
-        /* ── Scheduling ───────────────────────────────────── */
-        #schedule-section { display: none; }
-        .schedule-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 32px;
-            margin-bottom: 60px;
-            text-align: center;
-        }
-        .schedule-card h2 { font-size: 24px; margin-bottom: 8px; }
-        .schedule-card p { color: var(--text-secondary); font-size: 15px; margin-bottom: 24px; }
-        .calendly-inline-widget { border-radius: 12px; overflow: hidden; }
-
-        footer { padding: 40px 0; text-align: center; color: var(--text-muted); font-size: 13px; border-top: 1px solid var(--card-border); }
-
-        @media (max-width: 640px) {
-            .container, .nav-inner { padding: 0 20px; }
-            .q-section { padding: 24px 20px; }
-            .row-2 { grid-template-columns: 1fr; }
-        }
-    </style>
+    <title>Start the audit &middot; NextStepAI</title>
+    <meta name="description" content="A short intake before your free 30-minute strategy call. Type or talk. The more specific you are, the more useful the call.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <nav>
-    <div class="nav-inner">
-        <a class="logo" href="index.html">NextStep<span>AI</span></a>
+    <div class="wrap nav-inner">
+        <a class="logo" href="index.html">NextStepAI</a>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="index.html#contact" class="btn-outline" style="border-radius:10px; text-decoration:none;">Email Us Instead</a>
+            <a href="mailto:hello@nextstepsai.com" class="btn btn-ghost">Email instead</a>
         </div>
     </div>
 </nav>
 
 <header class="page-hero">
-    <div class="container">
-        <span class="eyebrow">AI Opportunity Audit</span>
-        <h1>Pre-Audit Questionnaire</h1>
-        <p>Takes about 20&ndash;25 minutes. The more specific you are, the more value the live discovery sessions deliver &mdash; there are no wrong answers.</p>
-        <p>Type your answers, or tap the mic next to any question and just talk &mdash; we'll transcribe it for you.</p>
+    <div class="wrap">
+        <span class="mono eyebrow accent">Step 01 &middot; Intake</span>
+        <h1>Tell me where the time goes.</h1>
+        <p>About 15 minutes. Type your answers, or tap the mic next to any question and just talk. Specific beats polished: "our ops manager spends four hours a week chasing pricing for custom quotes" is far more useful than "quoting is slow."</p>
+        <div id="carried" class="carried" hidden>You wrote on the homepage: <strong id="carried-text"></strong>. I've dropped it into the time sinks question below.</div>
     </div>
 </header>
 
-<main class="container">
+<main class="wrap">
     <form id="questionnaire-form">
         <input type="hidden" name="access_key" value="6bc3cc5b-d1c1-46ae-a720-ecd88e50f397">
         <input type="hidden" name="subject" value="New Pre-Audit Questionnaire Submission">
@@ -282,6 +40,7 @@
 
         <div class="q-section">
             <div class="q-section-header">
+                <span class="q-number">00</span>
                 <div>
                     <h2>Your contact info</h2>
                     <p>So we know who to follow up with.</p>
@@ -301,7 +60,7 @@
 
         <div class="q-section">
             <div class="q-section-header">
-                <span class="q-number">1</span>
+                <span class="q-number">01</span>
                 <div>
                     <h2>Company Snapshot</h2>
                     <p>Quick basics so we arrive at the interview already oriented.</p>
@@ -360,7 +119,7 @@
 
         <div class="q-section">
             <div class="q-section-header">
-                <span class="q-number">2</span>
+                <span class="q-number">02</span>
                 <div>
                     <h2>How the Business Runs</h2>
                     <p>Help us understand the day-to-day operation before we sit down with your team.</p>
@@ -389,7 +148,7 @@
 
         <div class="q-section">
             <div class="q-section-header">
-                <span class="q-number">3</span>
+                <span class="q-number">03</span>
                 <div>
                     <h2>Pain Points &amp; Time Sinks</h2>
                     <p>The most important section. Be specific &mdash; "we waste time on quotes" is less useful than "our ops manager spends 4 hours a week chasing pricing for custom quotes."</p>
@@ -427,7 +186,7 @@
 
         <div class="q-section">
             <div class="q-section-header">
-                <span class="q-number">4</span>
+                <span class="q-number">04</span>
                 <div>
                     <h2>Current AI Exposure</h2>
                     <p>Helps us calibrate the conversation &mdash; we adjust depending on how far along you are.</p>
@@ -469,7 +228,7 @@
 
         <div class="q-section">
             <div class="q-section-header">
-                <span class="q-number">5</span>
+                <span class="q-number">05</span>
                 <div>
                     <h2>Goals &amp; Decision-Making</h2>
                     <p>So we can frame the proposal around what success looks like to you.</p>
@@ -488,7 +247,7 @@
 
         <div class="q-section">
             <div class="q-section-header">
-                <span class="q-number">6</span>
+                <span class="q-number">06</span>
                 <div>
                     <h2>Helpful Attachments</h2>
                     <p>None are required, but each one shortens the discovery process. Don't create anything new &mdash; only send what already exists. You can attach files directly below.</p>
@@ -522,14 +281,14 @@
         </div>
 
         <div class="submit-area">
-            <button type="submit" class="btn">Submit Questionnaire &amp; Pick a Time</button>
+            <button type="submit" class="btn">Send answers &amp; pick a time &rarr;</button>
             <div id="form-status"></div>
             <p class="form-fallback">Prefer not to use this form? Email your answers directly to <a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a>.</p>
         </div>
     </form>
 
     <section id="schedule-section">
-        <div class="schedule-card">
+        <div>
             <h2>Great &mdash; now pick a time</h2>
             <p>Choose a slot for your free strategy call. You'll get a confirmation email, and we'll be notified the moment it's booked.</p>
             <div class="calendly-inline-widget" data-url="https://calendly.com/nextstepai279/free-strategy-call" style="min-width:280px;height:700px;"></div>
@@ -538,14 +297,23 @@
 </main>
 
 <footer>
-    <div class="container">
-        &copy; <span id="year"></span> NextStepAI. All rights reserved.
+    <div class="wrap foot">
+        <span>&copy; <span id="year"></span> NextStepAI</span>
+        <a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a>
     </div>
 </footer>
 
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ── Carry over the homepage input ────────────────────
+    const carried = (new URLSearchParams(location.search).get('q') || '').trim();
+    if (carried) {
+        document.getElementById('time_sinks').value = carried;
+        document.getElementById('carried-text').textContent = carried;
+        document.getElementById('carried').hidden = false;
+    }
 
     // ── Voice dictation ──────────────────────────────────
     function setupMic(button) {
@@ -661,7 +429,7 @@
             statusEl.textContent = 'Something went wrong sending your answers. Please email them directly to hello@nextstepsai.com instead.';
             statusEl.className = 'status-error';
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Questionnaire & Pick a Time';
+            submitBtn.textContent = 'Send answers & pick a time →';
         }
     });
 </script>

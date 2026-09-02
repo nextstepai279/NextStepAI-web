@@ -3,456 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NextStepAI &mdash; Find Your Next Step</title>
-    <meta name="description" content="NextStepAI helps companies identify and execute the next step they need to progress and grow.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-dark: #0a0e27;
-            --bg-mid: #1a1f3a;
-            --accent: #4ade80;
-            --accent-glow: rgba(74, 222, 128, 0.2);
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --text-muted: rgba(255, 255, 255, 0.5);
-            --card-bg: rgba(255, 255, 255, 0.04);
-            --card-border: rgba(255, 255, 255, 0.08);
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Background gradient orbs */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -200px;
-            left: -200px;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(74, 222, 128, 0.12) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: -300px;
-            right: -200px;
-            width: 700px;
-            height: 700px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 32px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ── Navigation ───────────────────────────────────── */
-        nav {
-            padding: 24px 0;
-            position: sticky;
-            top: 0;
-            background: rgba(10, 14, 39, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--card-border);
-            z-index: 100;
-        }
-
-        .nav-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-
-        .logo span {
-            color: var(--accent);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: var(--text-primary);
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: var(--accent);
-            color: var(--bg-dark);
-            text-decoration: none;
-            border: none;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 30px var(--accent-glow);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--text-primary);
-            border: 1px solid var(--card-border);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--accent);
-            background: var(--card-bg);
-            box-shadow: none;
-        }
-
-        /* ── Hero ─────────────────────────────────────────── */
-        .hero {
-            padding: 100px 0 80px;
-            text-align: center;
-        }
-
-        .eyebrow {
-            display: inline-block;
-            padding: 6px 14px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 24px;
-        }
-
-        h1 {
-            font-size: clamp(36px, 6vw, 64px);
-            font-weight: 800;
-            line-height: 1.1;
-            letter-spacing: -1.5px;
-            margin-bottom: 24px;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        h1 .highlight {
-            background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-tagline {
-            font-size: clamp(16px, 2vw, 19px);
-            color: var(--text-secondary);
-            max-width: 680px;
-            margin: 0 auto 40px;
-        }
-
-        .hero-cta {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        /* ── Sections ─────────────────────────────────────── */
-        section {
-            padding: 80px 0;
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 720px;
-            margin: 0 auto 60px;
-        }
-
-        h2 {
-            font-size: clamp(28px, 4vw, 40px);
-            font-weight: 700;
-            letter-spacing: -0.8px;
-            line-height: 1.2;
-            margin-bottom: 16px;
-        }
-
-        .section-header p {
-            font-size: 17px;
-            color: var(--text-secondary);
-        }
-
-        /* ── What we do — cards ───────────────────────────── */
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 32px;
-            transition: transform 0.2s, border-color 0.2s, background 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(74, 222, 128, 0.3);
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .card-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: var(--accent-glow);
-            color: var(--accent);
-            margin-bottom: 20px;
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .card h3 {
-            font-size: 19px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            letter-spacing: -0.3px;
-        }
-
-        .card p {
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-
-        /* ── About ────────────────────────────────────────── */
-        .about-content {
-            max-width: 760px;
-            margin: 0 auto;
-            font-size: 17px;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-
-        .about-content p {
-            margin-bottom: 18px;
-        }
-
-        .about-content p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* ── Contact ──────────────────────────────────────── */
-        .contact {
-            text-align: center;
-            background: linear-gradient(180deg, transparent 0%, rgba(74, 222, 128, 0.04) 100%);
-            border-top: 1px solid var(--card-border);
-        }
-
-        .contact-card {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 48px 32px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-        }
-
-        .contact-card h2 {
-            margin-bottom: 12px;
-        }
-
-        .contact-card p {
-            color: var(--text-secondary);
-            margin-bottom: 28px;
-            font-size: 16px;
-        }
-
-        .contact-email {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 28px;
-            background: var(--accent);
-            color: var(--bg-dark);
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 15px;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .contact-email:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 30px var(--accent-glow);
-        }
-
-        /* ── Footer ───────────────────────────────────────── */
-        footer {
-            padding: 40px 0;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 13px;
-            border-top: 1px solid var(--card-border);
-        }
-
-        /* ── Responsive ───────────────────────────────────── */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 20px;
-            }
-
-            .nav-links {
-                gap: 20px;
-            }
-
-            .nav-links a:not(.btn) {
-                display: none;
-            }
-
-            .hero {
-                padding: 60px 0 50px;
-            }
-
-            section {
-                padding: 60px 0;
-            }
-        }
-    </style>
+    <title>NextStepAI</title>
+    <meta name="description" content="Tell me what your team spends too much time on. I'll find the one piece AI can take off your plate first, and we'll talk it through on a free 30-minute call.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <nav>
-    <div class="container nav-inner">
-        <div class="logo">NextStep<span>AI</span></div>
+    <div class="wrap nav-inner">
+        <a class="logo" href="index.html">NextStepAI</a>
         <div class="nav-links">
-            <a href="#what-we-do">What We Do</a>
-            <a href="#about">About</a>
-            <a href="questionnaire.html" class="btn">Start Your Audit</a>
+            <a href="#how">How it works</a>
+            <a href="#who">Who it's for</a>
+            <a href="questionnaire.html" class="btn">Start the audit</a>
         </div>
     </div>
 </nav>
 
 <header class="hero">
-    <div class="container">
-        <span class="eyebrow">AI-Powered Business Strategy</span>
-        <h1>Find your <span class="highlight">next step</span> &mdash; the one that actually moves the needle.</h1>
-        <p class="hero-tagline">
-            We help companies cut through the noise and identify the single next step they need to progress, scale, and grow &mdash; powered by AI and grounded in real strategy.
-        </p>
-        <div class="hero-cta">
-            <a href="questionnaire.html" class="btn">Start Your Audit</a>
-            <a href="#what-we-do" class="btn btn-outline">Learn More</a>
-        </div>
+    <div class="wrap">
+        <span class="mono eyebrow accent">AI operations audit &middot; Free 30-minute call</span>
+        <h1>What does your team spend too much time on?</h1>
+        <p class="lede">Tell me about the busy work. I'll find the one piece AI can take off your plate first, and we'll talk it through on a free 30-minute call.</p>
+        <form class="ask" action="questionnaire.html" method="get">
+            <input type="text" name="q" placeholder="Our office manager re-types every intake form into billing..." autocomplete="off" aria-label="What does your team spend too much time on?">
+            <button type="submit" class="btn"><span>Start</span> &rarr;</button>
+        </form>
+        <p class="mono under">No pitch deck &middot; No 50-page roadmap &middot; One next step</p>
     </div>
 </header>
 
-<section id="what-we-do">
-    <div class="container">
-        <div class="section-header">
-            <h2>What we do</h2>
-            <p>Three things, done well, so your team can focus on growth instead of guesswork.</p>
+<section id="how">
+    <div class="wrap">
+        <div class="sec-head">
+            <span class="mono eyebrow">How it works</span>
+            <h2>Ten minutes of your time. One clear next step.</h2>
         </div>
-        <div class="cards">
-            <div class="card">
-                <div class="card-icon">01</div>
-                <h3>Assess</h3>
-                <p>We start by understanding where your business actually is &mdash; the metrics, the operations, the bottlenecks. No assumptions, no fluff.</p>
+        <div class="steps">
+            <div class="step">
+                <span class="mono n">01</span>
+                <h3>Tell me where the time goes</h3>
+                <p>A short intake, typed or spoken. A few questions about the business, then follow-ups based on what you actually said.</p>
             </div>
-            <div class="card">
-                <div class="card-icon">02</div>
-                <h3>Recommend</h3>
-                <p>We surface the highest-leverage next step. Not a 50-page roadmap &mdash; just the one or two moves that will make the biggest difference right now.</p>
+            <div class="step">
+                <span class="mono n">02</span>
+                <h3>We talk for 30 minutes</h3>
+                <p>Free. I come in having read your answers, so we skip the introductions and get straight to the bottleneck.</p>
             </div>
-            <div class="card">
-                <div class="card-icon">03</div>
-                <h3>Execute</h3>
-                <p>We work alongside your team to put that next step into motion. AI tools, custom workflows, and hands-on support until it ships.</p>
+            <div class="step">
+                <span class="mono n">03</span>
+                <h3>You get one next step</h3>
+                <p>The single highest-leverage thing to automate first, and what it would take. If you want it built, I build it with you.</p>
             </div>
+        </div>
+    </div>
+</section>
+
+<section id="who">
+    <div class="wrap">
+        <span class="mono eyebrow">Who it's for</span>
+        <div class="prose">
+            <p><strong>Owner-run businesses with a small team and too much to do.</strong> So far that has meant law firms, therapy practices, and oil and gas operators. The industry matters less than the pattern: a small team spending real hours on repetitive work that a computer should be doing.</p>
+            <p>If someone on your team dreads a task because it's the same thing every week, that's usually where we start.</p>
+        </div>
+        <div class="tags">
+            <span class="tag">Intake &amp; data entry</span>
+            <span class="tag">Quotes &amp; invoicing</span>
+            <span class="tag">Scheduling</span>
+            <span class="tag">Reporting</span>
+            <span class="tag">Document drafting</span>
+            <span class="tag">Follow-ups</span>
         </div>
     </div>
 </section>
 
 <section id="about">
-    <div class="container">
-        <div class="section-header">
-            <h2>Why NextStepAI</h2>
-        </div>
-        <div class="about-content">
-            <p>
-                Most companies don't have a strategy problem &mdash; they have an execution problem. They know they need to grow. They just don't know which lever to pull next.
-            </p>
-            <p>
-                We pair AI-driven analysis with practical business sense to identify the single most important step your company should take next. Then we help you take it.
-            </p>
-            <p>
-                Less paralysis. More progress.
-            </p>
+    <div class="wrap">
+        <span class="mono eyebrow">Why NextStepAI</span>
+        <div class="prose">
+            <p><strong>It's one person, not an agency.</strong> I do the audit, the call, and the build. There's no handoff to a junior team, and no incentive to sell you a bigger project than the problem needs.</p>
+            <p>Most businesses I talk to don't need an AI strategy. They need one boring, well-chosen automation that gives someone their afternoons back. Finding that is the whole job.</p>
         </div>
     </div>
 </section>
 
-<section id="contact" class="contact">
-    <div class="container">
-        <div class="contact-card">
-            <h2>Ready to find your next step?</h2>
-            <p>Fill out a short questionnaire and pick a time for a free 30-minute strategy call &mdash; or just send us a note.</p>
-            <a href="questionnaire.html" class="contact-email" style="margin-right: 12px;">Start Your Audit</a>
-            <a href="mailto:hello@nextstepsai.com" class="contact-email" style="background: transparent; border: 1px solid var(--card-border); color: var(--text-primary);">hello@nextstepsai.com</a>
+<section id="contact" class="cta">
+    <div class="wrap">
+        <h2>Ready when you are.</h2>
+        <p>Start the intake, or just send a note.</p>
+        <div class="row">
+            <a href="questionnaire.html" class="btn">Start the audit &rarr;</a>
+            <a href="mailto:hello@nextstepsai.com" class="btn btn-ghost">hello@nextstepsai.com</a>
         </div>
     </div>
 </section>
 
 <footer>
-    <div class="container">
-        &copy; <span id="year"></span> NextStepAI. All rights reserved.
+    <div class="wrap foot">
+        <span>&copy; <span id="year"></span> NextStepAI</span>
+        <a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a>
     </div>
 </footer>
 
