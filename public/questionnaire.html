@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start the audit &middot; NextStepAI</title>
+    <meta name="description" content="A short conversation before your free 30-minute strategy call. Type or talk. Most people finish in under ten minutes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav>
+    <div class="wrap nav-inner">
+        <a class="logo" href="index.html">NextStepAI</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="mailto:hello@nextstepsai.com" class="btn btn-ghost">Email instead</a>
+        </div>
+    </div>
+</nav>
+
+<header class="page-hero">
+    <div class="wrap">
+        <span class="mono eyebrow accent">Step 01 &middot; Intake</span>
+        <h1>Tell me where the time goes.</h1>
+        <p>A short back-and-forth, usually eight to ten questions. Type your answers, or tap the mic and just talk. Specific beats polished: "our ops manager spends four hours a week chasing pricing for custom quotes" is far more useful than "quoting is slow."</p>
+    </div>
+</header>
+
+<main class="wrap">
+    <div class="intake">
+        <div class="progress">
+            <span class="mono" id="progress-label">Question 1</span>
+            <div class="bar"><i id="progress-fill" style="width:4%"></i></div>
+        </div>
+
+        <div class="thread" id="thread" aria-live="polite"></div>
+
+        <form class="composer" id="composer">
+            <textarea id="answer" rows="1" placeholder="Type your answer..." autocomplete="off" aria-label="Your answer"></textarea>
+            <button type="button" class="mic-btn" id="mic" aria-label="Record your answer">&#127908;</button>
+            <button type="submit" class="btn" id="send">Send &rarr;</button>
+        </form>
+        <div class="composer-hint" id="composer-hint">
+            <span id="mic-status">Enter to send, Shift+Enter for a new line.</span>
+            <span id="error" class="err"></span>
+        </div>
+
+        <section class="wrap-up" id="wrap-up" hidden>
+            <span class="mono eyebrow accent">Step 02 &middot; Book the call</span>
+            <h2>Pick a time.</h2>
+            <p>Free, 30 minutes. Sam reads your answers before the call, so you can skip the introductions.</p>
+            <div class="calendly-inline-widget" id="calendly" style="min-width:280px;height:700px;"></div>
+            <p class="fallback">Calendar not loading? Email <a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a> and we'll sort out a time.</p>
+        </section>
+    </div>
+</main>
+
+<footer>
+    <div class="wrap foot">
+        <span>&copy; <span id="year"></span> NextStepAI</span>
+        <a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a>
+    </div>
+</footer>
+
+<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const CALENDLY_URL = 'https://calendly.com/nextstepai279/free-strategy-call';
+    const EXPECTED_TOTAL = 10;
+    const carried = (new URLSearchParams(location.search).get('q') || '').trim();
+
+    const FIXED = [
+        { key: 'name', text: "First, who am I talking to? Your name and what you do at the company." },
+        { key: 'email', text: "And the best email to reach you at.", validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : "That doesn't look like an email address. Try again?" },
+        { key: 'company', text: "What's the company called? Add the website if there is one." },
+        { key: 'about', text: "In a sentence or two: what does the business do, and roughly how many people work there?" },
+        { key: 'timeSink', text: carried
+            ? "You already told me something on the homepage. I've put it below. Add anything else, or just send it as-is."
+            : "Now the part that matters. What does your team spend too much time on? The monotonous, same-every-week stuff. Who does it, and how often?" },
+    ];
+
+    const thread = document.getElementById('thread');
+    const composer = document.getElementById('composer');
+    const answerEl = document.getElementById('answer');
+    const sendBtn = document.getElementById('send');
+    const errorEl = document.getElementById('error');
+    const progressLabel = document.getElementById('progress-label');
+    const progressFill = document.getElementById('progress-fill');
+    const wrapUp = document.getElementById('wrap-up');
+
+    const state = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        profile: {},
+        turns: [],
+        step: 0,
+        questionNumber: 1,
+        failures: 0,
+        done: false,
+    };
+
+    function addMessage(role, text) {
+        const el = document.createElement('div');
+        el.className = `msg ${role}`;
+        el.textContent = text;
+        thread.appendChild(el);
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        return el;
+    }
+
+    function showTyping() {
+        const el = document.createElement('div');
+        el.className = 'msg assistant';
+        el.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+        thread.appendChild(el);
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        return el;
+    }
+
+    function setProgress() {
+        progressLabel.textContent = `Question ${state.questionNumber}`;
+        const pct = Math.min(92, (state.questionNumber / EXPECTED_TOTAL) * 100);
+        progressFill.style.width = `${pct}%`;
+    }
+
+    function ask(text) {
+        setProgress();
+        addMessage('assistant', text);
+        answerEl.focus();
+    }
+
+    function setBusy(busy) {
+        sendBtn.disabled = busy;
+        answerEl.disabled = busy;
+    }
+
+    function autosize() {
+        answerEl.style.height = 'auto';
+        answerEl.style.height = `${Math.min(answerEl.scrollHeight, 200)}px`;
+    }
+
+    async function requestTurn(finish) {
+        const res = await fetch('/api/intake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: state.id, profile: state.profile, turns: state.turns, finish: !!finish }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    }
+
+    function sendEmail(summary) {
+        const p = state.profile;
+        const lines = [
+            `Name: ${p.name}`, `Email: ${p.email}`, `Company: ${p.company || ''}`, `About: ${p.about || ''}`, `Time sink: ${p.timeSink || ''}`,
+            '', '=== NOTES FOR SAM ===', summary || '(none)', '', '=== TRANSCRIPT ===',
+            ...state.turns.map(t => `${t.role === 'assistant' ? 'Q' : 'A'}: ${t.text}`),
+            '', `KV key: intake:${state.id}`,
+        ];
+        const form = new FormData();
+        form.append('access_key', '6bc3cc5b-d1c1-46ae-a720-ecd88e50f397');
+        form.append('subject', `Intake: ${p.company || p.name}`);
+        form.append('from_name', 'NextStepAI Intake');
+        form.append('name', p.name);
+        form.append('email', p.email);
+        form.append('message', lines.join('\n'));
+        return fetch('https://api.web3forms.com/submit', { method: 'POST', body: form, headers: { Accept: 'application/json' } }).catch(() => {});
+    }
+
+    function finishIntake(message, summary) {
+        state.done = true;
+        sendEmail(summary);
+        if (message) addMessage('assistant', message);
+        composer.hidden = true;
+        document.getElementById('composer-hint').hidden = true;
+        progressLabel.textContent = 'Done';
+        progressFill.style.width = '100%';
+        wrapUp.hidden = false;
+        initCalendly();
+        wrapUp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function initCalendly() {
+        const mount = () => window.Calendly.initInlineWidget({
+            url: CALENDLY_URL,
+            parentElement: document.getElementById('calendly'),
+            prefill: { name: state.profile.name || '', email: state.profile.email || '' },
+        });
+        if (window.Calendly) return mount();
+        const timer = setInterval(() => { if (window.Calendly) { clearInterval(timer); mount(); } }, 200);
+    }
+
+    async function handleAnswer(text) {
+        errorEl.textContent = '';
+
+        if (state.step < FIXED.length) {
+            const q = FIXED[state.step];
+            const problem = q.validate ? q.validate(text) : '';
+            if (problem) { errorEl.textContent = problem; return; }
+            state.profile[q.key] = text;
+            addMessage('user', text);
+            state.step += 1;
+            state.questionNumber += 1;
+            if (state.step < FIXED.length) {
+                ask(FIXED[state.step].text);
+                if (FIXED[state.step].key === 'timeSink' && carried) { answerEl.value = carried; autosize(); }
+                return;
+            }
+        } else {
+            state.turns.push({ role: 'user', text });
+            addMessage('user', text);
+        }
+
+        setBusy(true);
+        const typing = showTyping();
+        try {
+            const reply = await requestTurn(false);
+            typing.remove();
+            state.failures = 0;
+            if (reply.done) {
+                finishIntake(reply.message, reply.summary);
+                return;
+            }
+            state.turns.push({ role: 'assistant', text: reply.message });
+            state.questionNumber += 1;
+            ask(reply.message);
+        } catch (err) {
+            typing.remove();
+            state.failures += 1;
+            if (state.failures >= 2) {
+                requestTurn(true).catch(() => {});
+                finishIntake("I'm having trouble on my end, but I've saved what you told me. Let's finish the rest on the call. Pick a time below.", "AI step failed mid-intake. Transcript is partial.");
+                return;
+            }
+            state.turns.pop();
+            thread.lastElementChild.remove();
+            answerEl.value = text;
+            errorEl.textContent = 'That didn\'t go through. Try sending again.';
+        } finally {
+            setBusy(false);
+            answerEl.focus();
+        }
+    }
+
+    composer.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = answerEl.value.trim();
+        if (!text || sendBtn.disabled) return;
+        answerEl.value = '';
+        autosize();
+        handleAnswer(text);
+    });
+
+    answerEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); composer.requestSubmit(); }
+    });
+    answerEl.addEventListener('input', autosize);
+
+    // ── Voice dictation ──────────────────────────────────
+    (function setupMic() {
+        const button = document.getElementById('mic');
+        const statusEl = document.getElementById('mic-status');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) { button.style.display = 'none'; return; }
+
+        let recognition = null;
+        let recording = false;
+        let baseValue = '';
+
+        button.addEventListener('click', () => {
+            if (recording) { recognition.stop(); return; }
+            baseValue = answerEl.value.trim();
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                recording = true;
+                button.classList.add('recording');
+                statusEl.textContent = 'Listening. Tap the mic again to stop.';
+            };
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
+                answerEl.value = baseValue ? `${baseValue} ${transcript}` : transcript;
+                autosize();
+            };
+            recognition.onerror = (event) => {
+                statusEl.textContent = event.error === 'not-allowed'
+                    ? 'Microphone access was blocked. You can still type.'
+                    : 'Voice input stopped. Try again or type your answer.';
+            };
+            recognition.onend = () => {
+                recording = false;
+                button.classList.remove('recording');
+                if (statusEl.textContent.startsWith('Listening')) statusEl.textContent = 'Enter to send, Shift+Enter for a new line.';
+            };
+            recognition.start();
+        });
+    })();
+
+    // ── Start ────────────────────────────────────────────
+    addMessage('system', "A handful of questions, then follow-ups based on what you say. Nothing here is binding, and you can be as blunt as you like.");
+    ask(FIXED[0].text);
+</script>
+
+</body>
+</html>

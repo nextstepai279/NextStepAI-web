@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nextstepai",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-07-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "kv_namespaces": [{ "binding": "INTAKE", "id": "e21b7168fd9d4825a416b4da1f5c21ac" }],
+  "vars": { "ANTHROPIC_WORKSPACE_ID": "wrkspc_0143tK1cA9KKndBXeQnyU3Ze" }
+}

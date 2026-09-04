@@ -6,3 +6,5 @@ node_modules/
 .env.local
 .vscode/
 .idea/
+.wrangler/
+.dev.vars
