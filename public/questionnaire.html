@@ -72,17 +72,7 @@
 
     const CALENDLY_URL = 'https://calendly.com/nextstepai279/free-strategy-call';
     const EXPECTED_TOTAL = 10;
-    const carried = (new URLSearchParams(location.search).get('q') || '').trim();
-
-    const FIXED = [
-        { key: 'name', text: "First, who am I talking to? Your name and what you do at the company." },
-        { key: 'email', text: "And the best email to reach you at.", validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : "That doesn't look like an email address. Try again?" },
-        { key: 'company', text: "What's the company called? Add the website if there is one." },
-        { key: 'about', text: "In a sentence or two: what does the business do, and roughly how many people work there?" },
-        { key: 'timeSink', text: carried
-            ? "You already told me something on the homepage. I've put it below. Add anything else, or just send it as-is."
-            : "Now the part that matters. What does your team spend too much time on? The monotonous, same-every-week stuff. Who does it, and how often?" },
-    ];
+    const FIRST_QUESTION = "First, who am I talking to? Your name, your role, and the company you're with.";
 
     const thread = document.getElementById('thread');
     const composer = document.getElementById('composer');
@@ -95,9 +85,9 @@
 
     const state = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        carried: (new URLSearchParams(location.search).get('q') || '').trim(),
         profile: {},
         turns: [],
-        step: 0,
         questionNumber: 1,
         failures: 0,
         done: false,
@@ -123,11 +113,11 @@
 
     function setProgress() {
         progressLabel.textContent = `Question ${state.questionNumber}`;
-        const pct = Math.min(92, (state.questionNumber / EXPECTED_TOTAL) * 100);
-        progressFill.style.width = `${pct}%`;
+        progressFill.style.width = `${Math.min(92, (state.questionNumber / EXPECTED_TOTAL) * 100)}%`;
     }
 
     function ask(text) {
+        state.turns.push({ role: 'assistant', text });
         setProgress();
         addMessage('assistant', text);
         answerEl.focus();
@@ -147,7 +137,7 @@
         const res = await fetch('/api/intake', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: state.id, profile: state.profile, turns: state.turns, finish: !!finish }),
+            body: JSON.stringify({ id: state.id, carried: state.carried, profile: state.profile, turns: state.turns, finish: !!finish }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -156,17 +146,19 @@
     function sendEmail(summary) {
         const p = state.profile;
         const lines = [
-            `Name: ${p.name}`, `Email: ${p.email}`, `Company: ${p.company || ''}`, `About: ${p.about || ''}`, `Time sink: ${p.timeSink || ''}`,
+            `Name: ${p.name || ''}`, `Role: ${p.role || ''}`, `Email: ${p.email || ''}`, `Company: ${p.company || ''}`, `Website: ${p.website || ''}`,
+            `About: ${p.about || ''}`, `Time sink: ${p.timeSink || ''}`,
             '', '=== NOTES FOR SAM ===', summary || '(none)', '', '=== TRANSCRIPT ===',
+            ...(state.carried ? [`Homepage input: ${state.carried}`] : []),
             ...state.turns.map(t => `${t.role === 'assistant' ? 'Q' : 'A'}: ${t.text}`),
             '', `KV key: intake:${state.id}`,
         ];
         const form = new FormData();
         form.append('access_key', '6bc3cc5b-d1c1-46ae-a720-ecd88e50f397');
-        form.append('subject', `Intake: ${p.company || p.name}`);
+        form.append('subject', `Intake: ${p.company || p.name || 'unknown'}`);
         form.append('from_name', 'NextStepAI Intake');
-        form.append('name', p.name);
-        form.append('email', p.email);
+        form.append('name', p.name || 'Unknown');
+        form.append('email', p.email || 'hello@nextstepsai.com');
         form.append('message', lines.join('\n'));
         return fetch('https://api.web3forms.com/submit', { method: 'POST', body: form, headers: { Accept: 'application/json' } }).catch(() => {});
     }
@@ -196,24 +188,8 @@
 
     async function handleAnswer(text) {
         errorEl.textContent = '';
-
-        if (state.step < FIXED.length) {
-            const q = FIXED[state.step];
-            const problem = q.validate ? q.validate(text) : '';
-            if (problem) { errorEl.textContent = problem; return; }
-            state.profile[q.key] = text;
-            addMessage('user', text);
-            state.step += 1;
-            state.questionNumber += 1;
-            if (state.step < FIXED.length) {
-                ask(FIXED[state.step].text);
-                if (FIXED[state.step].key === 'timeSink' && carried) { answerEl.value = carried; autosize(); }
-                return;
-            }
-        } else {
-            state.turns.push({ role: 'user', text });
-            addMessage('user', text);
-        }
+        state.turns.push({ role: 'user', text });
+        addMessage('user', text);
 
         setBusy(true);
         const typing = showTyping();
@@ -221,11 +197,11 @@
             const reply = await requestTurn(false);
             typing.remove();
             state.failures = 0;
+            state.profile = reply.profile || state.profile;
             if (reply.done) {
                 finishIntake(reply.message, reply.summary);
                 return;
             }
-            state.turns.push({ role: 'assistant', text: reply.message });
             state.questionNumber += 1;
             ask(reply.message);
         } catch (err) {
@@ -306,7 +282,8 @@
 
     // ── Start ────────────────────────────────────────────
     addMessage('system', "A handful of questions, then follow-ups based on what you say. Nothing here is binding, and you can be as blunt as you like.");
-    ask(FIXED[0].text);
+    if (state.carried) addMessage('system', `From the homepage: "${state.carried}". I've got that, so no need to repeat it.`);
+    ask(FIRST_QUESTION);
 </script>
 
 </body>
