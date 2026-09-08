@@ -16,6 +16,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
@@ -277,7 +278,6 @@ input[type="file"] { color: var(--muted); font-size: 14px; }
 .composer textarea, .composer textarea:focus { flex: 1; min-height: 24px; max-height: 200px; background: transparent; border: 0; box-shadow: none; padding: 8px 0; font-size: 16px; resize: none; }
 .composer .mic-btn { position: static; }
 .composer .btn { padding: 9px 14px; }
-.composer[hidden] { display: none; }
 .composer-hint { margin-top: 10px; font-size: 13.5px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; }
 .composer-hint .err { color: var(--danger); }
 
