@@ -302,3 +302,18 @@ input[type="file"] { color: var(--muted); font-size: 14px; }
     .person { grid-template-columns: 1fr; gap: 20px; }
     .photo { width: 160px; }
 }
+
+.alt-cta { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.alt-cta a { color: var(--ink); text-underline-offset: 3px; }
+.fineprint { margin: -12px 0 24px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.fineprint a { color: var(--muted); text-underline-offset: 3px; }
+.skip { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.skip:hover { color: #fff; }
+.foot-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.legal { padding-bottom: 72px; font-size: 16px; }
+.legal h2 { font-size: 20px; letter-spacing: -0.01em; margin: 36px 0 12px; }
+.legal p + p { margin-top: 12px; }
+.legal ul { margin: 12px 0 0 20px; color: var(--muted); }
+.legal li { margin-top: 8px; }
+.legal a { color: var(--ink); }
+.legal ul + p { margin-top: 16px; }

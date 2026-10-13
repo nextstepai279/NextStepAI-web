@@ -5,6 +5,12 @@ const MAX_TEXT = 2000;
 const ID_PATTERN = /^\d{13}-[a-z0-9]{6,12}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PROFILE_KEYS = ["name", "role", "email", "company", "website", "about", "timeSink"];
+const SOURCE_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid", "msclkid", "referrer", "landing", "firstSeen"];
+const CANONICAL_HOST = "nextstepsai.com";
+const ALLOWED_ORIGINS = new Set([`https://${CANONICAL_HOST}`, `https://www.${CANONICAL_HOST}`, "http://localhost:8787", "http://127.0.0.1:8787"]);
+const MAX_CALLS_PER_CONVERSATION = 15;
+const MAX_CONVERSATIONS_PER_IP_PER_DAY = 5;
+const MAX_CONVERSATIONS_PER_DAY = 50;
 
 const SYSTEM = `You are the intake interviewer for NextStepAI, an AI consulting practice run by Balin and his son Sam. Balin has 25 years of running small and mid-sized businesses; Sam builds the automation. A prospective client is answering your questions before a free 30-minute strategy call with them. They will read the full transcript before the call.
 
@@ -37,6 +43,8 @@ Output rules:
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const redirect = canonicalRedirect(url);
+    if (redirect) return redirect;
     if (url.pathname === "/api/intake") {
       if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
       return handleIntake(request, env, ctx);
@@ -46,7 +54,18 @@ export default {
   },
 };
 
+function canonicalRedirect(url) {
+  const isProdHost = url.hostname === CANONICAL_HOST || url.hostname === `www.${CANONICAL_HOST}`;
+  if (!isProdHost) return null;
+  if (url.protocol === "https:" && url.hostname === CANONICAL_HOST) return null;
+  url.protocol = "https:";
+  url.hostname = CANONICAL_HOST;
+  return Response.redirect(url.toString(), 301);
+}
+
 async function handleIntake(request, env, ctx) {
+  if (!ALLOWED_ORIGINS.has(request.headers.get("Origin"))) return json({ error: "Forbidden" }, 403);
+
   let body;
   try {
     body = await request.json();
@@ -56,15 +75,18 @@ async function handleIntake(request, env, ctx) {
 
   const parsed = validate(body);
   if (parsed.error) return json({ error: parsed.error }, 400);
-  const { id, carried, profile, turns, finish } = parsed;
+  const { id, carried, profile, turns, finish, source } = parsed;
+  const existing = await env.INTAKE.get(`intake:${id}`, "json");
 
   const record = {
     id,
     createdAt: new Date(Number(id.slice(0, 13))).toISOString(),
     updatedAt: new Date().toISOString(),
+    source,
     carried,
     profile,
     turns,
+    calls: existing?.calls || 0,
     done: false,
     summary: "",
   };
@@ -75,6 +97,14 @@ async function handleIntake(request, env, ctx) {
     ctx.waitUntil(save(env, record));
     return json({ done: true, message: "", summary: record.summary, profile });
   }
+
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const limit = await checkLimits(ip, record, existing, env);
+  if (limit) {
+    console.log("intake limited:", limit);
+    return json({ error: "limited" }, 429);
+  }
+  record.calls += 1;
 
   let reply;
   try {
@@ -102,9 +132,42 @@ async function handleIntake(request, env, ctx) {
   return json({ done: reply.done, message: reply.message, summary: reply.done ? reply.summary : "", profile: reply.profile });
 }
 
+async function checkLimits(ip, record, existing, env) {
+  const { success } = await env.INTAKE_RATE_LIMITER.limit({ key: ip });
+  if (!success) return "rate";
+  if (record.calls >= MAX_CALLS_PER_CONVERSATION) return "conversation";
+  if (!existing && !(await claimConversation(ip, env))) return "daily";
+  return null;
+}
+
+async function claimConversation(ip, env) {
+  const day = new Date().toISOString().slice(0, 10);
+  const ipKey = `limit:${day}:ip:${await hash(ip)}`;
+  const dayKey = `limit:${day}:all`;
+  const [ipCount, dayCount] = (await Promise.all([env.INTAKE.get(ipKey), env.INTAKE.get(dayKey)])).map((v) => Number(v) || 0);
+  if (ipCount >= MAX_CONVERSATIONS_PER_IP_PER_DAY || dayCount >= MAX_CONVERSATIONS_PER_DAY) return false;
+  const ttl = { expirationTtl: 2 * 24 * 60 * 60 };
+  await Promise.all([env.INTAKE.put(ipKey, String(ipCount + 1), ttl), env.INTAKE.put(dayKey, String(dayCount + 1), ttl)]);
+  return true;
+}
+
+async function hash(text) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].slice(0, 8).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function cleanSource(source) {
+  const clean = {};
+  if (!source || typeof source !== "object") return clean;
+  for (const key of SOURCE_KEYS) {
+    if (typeof source[key] === "string" && source[key]) clean[key] = source[key].slice(0, 300);
+  }
+  return clean;
+}
+
 function validate(body) {
   if (!body || typeof body !== "object") return { error: "Bad body" };
-  const { id, carried, profile, turns, finish } = body;
+  const { id, carried, profile, turns, finish, source } = body;
   if (typeof id !== "string" || !ID_PATTERN.test(id)) return { error: "Bad id" };
 
   const cleanProfile = {};
@@ -127,6 +190,7 @@ function validate(body) {
     profile: cleanProfile,
     turns: cleanTurns,
     finish: finish === true,
+    source: cleanSource(source),
   };
 }
 

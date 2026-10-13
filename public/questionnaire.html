@@ -8,7 +8,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta property="og:title" content="Start the audit | NextStepAI">
+    <meta property="og:description" content="A short conversation about where your team's time goes, then a free 30-minute call.">
+    <meta property="og:image" content="https://nextstepsai.com/og.png">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="styles.css">
+    <script src="track.js"></script>
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "0fb52395ac29418fa9dabfdcbc367337"}'></script>
 </head>
 <body>
 
@@ -36,6 +44,7 @@
             <span class="mono" id="progress-label">Question 1</span>
             <div class="bar"><i id="progress-fill" style="width:4%"></i></div>
         </div>
+        <p class="fineprint">Your answers go to Balin and Sam, and an AI model reads them to pick the next question. <a href="/privacy">Privacy policy</a>. <button type="button" class="skip" id="skip">Rather just book a call? Skip to booking &rarr;</button></p>
 
         <div class="thread" id="thread" aria-live="polite"></div>
 
@@ -62,7 +71,7 @@
 <footer>
     <div class="wrap foot">
         <span>&copy; <span id="year"></span> NextStepAI</span>
-        <a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a>
+        <span class="foot-links"><a href="/privacy">Privacy</a><a href="mailto:hello@nextstepsai.com">hello@nextstepsai.com</a></span>
     </div>
 </footer>
 
@@ -133,42 +142,66 @@
         answerEl.style.height = `${Math.min(answerEl.scrollHeight, 200)}px`;
     }
 
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     async function requestTurn(finish) {
         const res = await fetch('/api/intake', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: state.id, carried: state.carried, profile: state.profile, turns: state.turns, finish: !!finish }),
+            body: JSON.stringify({ id: state.id, carried: state.carried, profile: state.profile, turns: state.turns, finish: !!finish, source: window.nsai.source() }),
         });
+        if (res.status === 429) throw Object.assign(new Error('limited'), { limited: true });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
     }
 
-    function sendEmail(summary) {
+    function hasAnswers() {
+        return state.turns.some(t => t.role === 'user');
+    }
+
+    function sourceLines() {
+        const s = window.nsai.source() || {};
+        return Object.entries(s).filter(([k]) => k !== 'firstSeen').map(([k, v]) => `${k}: ${v}`);
+    }
+
+    function buildEmail(subjectPrefix, summary) {
         const p = state.profile;
         const lines = [
             `Name: ${p.name || ''}`, `Role: ${p.role || ''}`, `Email: ${p.email || ''}`, `Company: ${p.company || ''}`, `Website: ${p.website || ''}`,
             `About: ${p.about || ''}`, `Time sink: ${p.timeSink || ''}`,
-            '', '=== NOTES FOR SAM ===', summary || '(none)', '', '=== TRANSCRIPT ===',
+            '', '=== NOTES ===', summary || '(none)', '', '=== TRANSCRIPT ===',
             ...(state.carried ? [`Homepage input: ${state.carried}`] : []),
             ...state.turns.map(t => `${t.role === 'assistant' ? 'Q' : 'A'}: ${t.text}`),
+            '', '=== HOW THEY FOUND US ===', ...(sourceLines().length ? sourceLines() : ['(direct visit, no campaign info)']),
             '', `KV key: intake:${state.id}`,
         ];
         const form = new FormData();
         form.append('access_key', '6bc3cc5b-d1c1-46ae-a720-ecd88e50f397');
-        form.append('subject', `Intake: ${p.company || p.name || 'unknown'}`);
+        form.append('subject', `${subjectPrefix}: ${p.company || p.name || 'unknown'}`);
         form.append('from_name', 'NextStepAI Intake');
         form.append('name', p.name || 'Unknown');
-        form.append('email', p.email || 'hello@nextstepsai.com');
+        form.append('email', EMAIL_RE.test(p.email || '') ? p.email : 'hello@nextstepsai.com');
         form.append('message', lines.join('\n'));
-        return fetch('https://api.web3forms.com/submit', { method: 'POST', body: form, headers: { Accept: 'application/json' } }).catch(() => {});
+        return form;
     }
 
-    function finishIntake(message, summary) {
+    function sendEmail(subjectPrefix, summary) {
+        return fetch('https://api.web3forms.com/submit', { method: 'POST', body: buildEmail(subjectPrefix, summary), headers: { Accept: 'application/json' } }).catch(() => {});
+    }
+
+    function sendAbandonedLead() {
+        if (state.done || state.abandonSent || !EMAIL_RE.test(state.profile.email || '')) return;
+        state.abandonSent = true;
+        navigator.sendBeacon('https://api.web3forms.com/submit', buildEmail('Partial intake (left the page)', 'They gave an email but left before finishing. Worth a follow-up.'));
+    }
+
+    function finishIntake(message, summary, subjectPrefix = 'Intake') {
         state.done = true;
-        sendEmail(summary);
+        if (hasAnswers()) sendEmail(subjectPrefix, summary);
         if (message) addMessage('assistant', message);
         composer.hidden = true;
         document.getElementById('composer-hint').hidden = true;
+        document.getElementById('skip').hidden = true;
         progressLabel.textContent = 'Done';
         progressFill.style.width = '100%';
         wrapUp.hidden = false;
@@ -186,8 +219,16 @@
         const timer = setInterval(() => { if (window.Calendly) { clearInterval(timer); mount(); } }, 200);
     }
 
+    function skipToBooking() {
+        if (state.done) return;
+        window.nsai.track('skip_to_booking');
+        if (hasAnswers()) requestTurn(true).catch(() => {});
+        finishIntake('', 'They skipped to booking partway through. Transcript is partial.', 'Partial intake (skipped to booking)');
+    }
+
     async function handleAnswer(text) {
         errorEl.textContent = '';
+        if (!hasAnswers()) window.nsai.track('intake_started');
         state.turns.push({ role: 'user', text });
         addMessage('user', text);
 
@@ -199,6 +240,7 @@
             state.failures = 0;
             state.profile = reply.profile || state.profile;
             if (reply.done) {
+                window.nsai.track('intake_completed');
                 finishIntake(reply.message, reply.summary);
                 return;
             }
@@ -206,10 +248,15 @@
             ask(reply.message);
         } catch (err) {
             typing.remove();
+            if (err.limited) {
+                requestTurn(true).catch(() => {});
+                finishIntake("Our chat is at capacity right now, but we've saved what you told us. Pick a time below and we'll cover the rest on the call.", 'Usage limit reached mid-intake. Transcript is partial.', 'Partial intake (usage limit)');
+                return;
+            }
             state.failures += 1;
             if (state.failures >= 2) {
                 requestTurn(true).catch(() => {});
-                finishIntake("I'm having trouble on my end, but I've saved what you told me. Let's finish the rest on the call. Pick a time below.", "AI step failed mid-intake. Transcript is partial.");
+                finishIntake("I'm having trouble on my end, but I've saved what you told me. Let's finish the rest on the call. Pick a time below.", "AI step failed mid-intake. Transcript is partial.", 'Partial intake (AI error)');
                 return;
             }
             state.turns.pop();
@@ -284,6 +331,15 @@
     addMessage('system', "A handful of questions, then follow-ups based on what you say. Nothing here is binding, and you can be as blunt as you like.");
     if (state.carried) addMessage('system', `From the homepage: "${state.carried}". I've got that, so no need to repeat it.`);
     ask(FIRST_QUESTION);
+
+    document.getElementById('skip').addEventListener('click', skipToBooking);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') sendAbandonedLead();
+    });
+    window.addEventListener('message', (e) => {
+        if (e.origin === 'https://calendly.com' && e.data && e.data.event === 'calendly.event_scheduled') window.nsai.track('call_booked');
+    });
+    if (location.hash === '#book') skipToBooking();
 </script>
 
 </body>
