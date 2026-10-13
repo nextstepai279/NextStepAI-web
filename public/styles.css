@@ -244,7 +244,7 @@ input[type="file"] { color: var(--muted); font-size: 14px; }
 #schedule-section { display: none; padding: 40px 0 64px; border-top: 1px solid var(--line); }
 #schedule-section h2 { margin-bottom: 10px; }
 #schedule-section p { margin-bottom: 24px; }
-.calendly-inline-widget { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.calendly-embed { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
 
 @media (max-width: 760px) {
     .hero { padding: 80px 0 64px; }
